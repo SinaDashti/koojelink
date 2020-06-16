@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from urllib.parse import urlparse
+import re
 import random
 import string
 import os
@@ -7,12 +7,21 @@ import os
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY")
 
-urls = []
+# urls = []
 
 
 def url_validator(url):
-    result = urlparse(url)
-    return all([result.scheme, result.netloc, result.path])
+    regex = re.compile(
+        r"^(?:http|ftp)s?://"  # http:// or https://
+        r"(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|"  # domain...
+        r"localhost|"  # localhost...
+        r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"  # ...or ip
+        r"(?::\d+)?"  # optional port
+        r"(?:/?|[/?]\S+)$",
+        re.IGNORECASE,
+    )
+
+    return re.match(regex, url) is not None
 
 
 def random_word():
@@ -29,8 +38,8 @@ def handle_post_request():
     if request.method == "POST":
         input_url = {"long_url": request.json["long_url"]}
         if url_validator(input_url.get("long_url")):
-            output_url = {"short_url": short_out(randomword())}
-            urls.append([input_url, output_url])
+            output_url = {"short_url": short_out(random_word())}
+            # urls.append([input_url, output_url])
             # return jsonify({'urls':urls})
             return output_url.get("short_url")
         else:
