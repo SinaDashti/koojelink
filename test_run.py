@@ -43,26 +43,13 @@ class TestMyRun(unittest.TestCase):
         )
 
     def test_post_wrong(self):
-        post1 = self.client.post(
-            path="/", data=json.dumps(self.data[1]), content_type="application/json"
-        )
-        self.assertEqual(post1.status_code, 200)
-        self.assertNotIn("https://koojelink/", post1.data.decode("utf-8"))
-        self.assertEqual(post1.json["error"], "wrong key:value input")
-
-        post2 = self.client.post(
-            path="/", data=json.dumps(self.data[2]), content_type="application/json"
-        )
-        self.assertEqual(post2.status_code, 200)
-        self.assertNotIn("https://koojelink/", post2.data.decode("utf-8"))
-        self.assertEqual(post2.json["error"], "wrong key:value input")
-
-        post3 = self.client.post(
-            path="/", data=json.dumps(self.data[3]), content_type="application/json"
-        )
-        self.assertEqual(post3.status_code, 200)
-        self.assertNotIn("https://koojelink/", post3.data.decode("utf-8"))
-        self.assertEqual(post3.json["error"], "wrong key:value input")
+        for i in range(1, 4):
+            post = self.client.post(
+                path="/", data=json.dumps(self.data[i]), content_type="application/json"
+            )
+            self.assertEqual(post.status_code, 200)
+            self.assertNotIn("https://koojelink/", post.data.decode("utf-8"))
+            self.assertEqual(post.json["error"], "wrong key:value input")
 
 
 if __name__ == "__main__":
