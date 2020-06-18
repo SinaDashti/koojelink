@@ -1,4 +1,6 @@
-from flask import Flask, request, jsonify, redirect
+from flask import Flask, request, jsonify, redirect, render_template
+from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
 import re
 import random
 import string
@@ -6,8 +8,19 @@ import os
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY")
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///site.db"
+# app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
 
-urls = []
+
+class Urls(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    long_url = db.Column(db.String(), unique=True, nullable=False)
+    random_text = db.Column(db.String(6), unique=True, nullable=False)
+    # exp_date = db.Column(db.DateTime, nullable = False)
+
+    def __repr__(self):
+        return f"Urls('{self.long_url}', '{self.random_text}')"
 
 
 def url_validator(url):
@@ -33,14 +46,11 @@ def short_out(random_text):
     return f"https://koojelink/{random_text}"
 
 
-# without database
-def search_for_url(all_urls, random_text):
-    for url in all_urls:
-        if url[1]["short_url"].split("k/")[1] == random_text:
-            return url[0]["long_url"]
-
-    # just for test, it should change !
-    return "https://www.manutd.com"
+def search_for_url(Urls, random_text):
+    match = Urls.query.filter_by(random_text=random_text).first()
+    if match:
+        return match.long_url
+    return False
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -49,8 +59,12 @@ def handle_post_request():
         input_url = {"long_url": request.json["long_url"]}
         if url_validator(input_url.get("long_url")):
             output_url = {"short_url": short_out(random_word())}
-            urls.append([input_url, output_url])
-            # return jsonify({'urls':urls})
+            new_url = Urls(
+                long_url=input_url.get("long_url"),
+                random_text=output_url.get("short_url").split("k/")[1],
+            )
+            db.session.add(new_url)
+            db.session.commit()
             return output_url.get("short_url")
         else:
             return jsonify({"error": "wrong key:value input"})
@@ -60,7 +74,17 @@ def handle_post_request():
 
 @app.route("/koojelink/<string:random_text>")
 def redirect_to_origin(random_text):
-    return redirect(search_for_url(urls, random_text))
+    origin = search_for_url(Urls, random_text)
+    if origin:
+        return redirect(origin)
+    else:
+        return """
+        <div style="text-align: center;">
+            <h1>Pages does not found (Error 404).</h1>
+            <h3>Please retry with correct short link.</h3>
+        </div>
+        """
+        # return render_template('404.html')
 
 
 if __name__ == "__main__":
