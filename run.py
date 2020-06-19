@@ -53,19 +53,21 @@ def search_for_url(Urls, random_text):
     return False
 
 
+def add_url_to_db(l_url, s_url):
+    new_url = Urls(long_url=l_url, random_text=s_url.split("k/")[1],)
+    db.session.add(new_url)
+    db.session.commit()
+
+
 @app.route("/", methods=["GET", "POST"])
 def handle_post_request():
     if request.method == "POST":
         input_url = {"long_url": request.json["long_url"]}
-        if url_validator(input_url.get("long_url")):
-            output_url = {"short_url": short_out(random_word())}
-            new_url = Urls(
-                long_url=input_url.get("long_url"),
-                random_text=output_url.get("short_url").split("k/")[1],
-            )
-            db.session.add(new_url)
-            db.session.commit()
-            return output_url.get("short_url")
+        long_url = input_url.get("long_url")
+        if url_validator(long_url):
+            output_url = short_out(random_word())
+            add_url_to_db(long_url, output_url)
+            return output_url
         else:
             return jsonify({"error": "wrong key:value input"})
     else:
