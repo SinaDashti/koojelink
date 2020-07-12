@@ -11,7 +11,7 @@ from flask_migrate import Migrate, MigrateCommand
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY")
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///site.db"
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 
 migrate = Migrate(app, db)
@@ -54,11 +54,14 @@ def random_word():
 def short_out(random_text):
     return f"https://koojelink/{random_text}"
 
+
 def long_url_exist(Urls, l_url):
     return Urls.query.filter_by(long_url=l_url).first()
 
+
 def get_random_text(l_url_query):
     return l_url_query.random_text if l_url_query is not None else None
+
 
 def random_text_exist(Urls, random_text):
     return Urls.query.filter_by(random_text=random_text).first()
@@ -75,18 +78,16 @@ def search_for_url(Urls, random_text):
         return None, None
 
 
-
 def get_exp(exp_date):
     if exp_date is None:
         return datetime.strptime("2212-12-12", "%Y-%m-%d")
     else:
         return datetime.strptime(exp_date, "%Y-%m-%d")
 
+
 def add_url_to_db(l_url, s_url, exp_date):
     new_url = Urls(
-        long_url=l_url,
-        random_text=s_url.split("k/")[1],
-        exp_date=get_exp(exp_date),
+        long_url=l_url, random_text=s_url.split("k/")[1], exp_date=get_exp(exp_date),
     )
     db.session.add(new_url)
     db.session.commit()
@@ -97,7 +98,9 @@ def validate_time_format(date_text):
         if date_text is None:
             return True
         else:
-            if date_text != datetime.strptime(date_text, "%Y-%m-%d").strftime("%Y-%m-%d"):
+            if date_text != datetime.strptime(date_text, "%Y-%m-%d").strftime(
+                "%Y-%m-%d"
+            ):
                 raise ValueError
             return True
     except ValueError:
@@ -105,11 +108,12 @@ def validate_time_format(date_text):
 
 
 def recreate_random_word():
-    while(True):
+    while True:
         r_txt = random_word()
         if random_text_exist(Urls, r_txt) is None:
             break
     return short_out(r_txt)
+
 
 @app.route("/", methods=["GET", "POST"])
 def handle_post_request():
@@ -128,7 +132,6 @@ def handle_post_request():
                     return "Incorrect data format, should be YYYY-MM-DD"
             else:
                 return f"{short_out(get_random_text(l_exist))}"
-
 
         else:
             return jsonify({"error": "wrong key:value input"})
