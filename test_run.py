@@ -93,5 +93,21 @@ class TestMyRun(unittest.TestCase):
             )
 
 
+    def test_redirect_to_origin(self):
+        resp = self.client.get(path="/koojelink/abcdef")
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn("Error 404", resp.data.decode("utf-8"))
+
+        resp = self.client.get(path="/koojelink/BVMR0N")
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn("Short link has been expired", resp.data.decode("utf-8"))
+
+        resp = self.client.get(path="/koojelink/a8lyHg")
+        self.assertEqual(resp.status_code, 302)
+        self.assertIn(self.data[8]["long_url"], resp.data.decode("utf-8"))
+
+
+
+
 # if __name__ == "__main__":
 #     unittest.main()
