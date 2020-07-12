@@ -70,10 +70,12 @@ def random_text_exist(Urls, random_text):
 def search_for_url(Urls, random_text):
     match = random_text_exist(Urls, random_text)
     if match:
-        if match.exp_date >= datetime.now():
-            return True, match.long_url
-        else:
-            return False, match.exp_date
+        if match.exp_date is not None:
+            if match.exp_date >= datetime.now():
+                return True, match.long_url
+            else:
+                return False, match.exp_date
+        return None, None
     else:
         return None, None
 
@@ -143,11 +145,11 @@ def handle_post_request():
 def redirect_to_origin(random_text):
     origin = search_for_url(Urls, random_text)
     if origin[0]:
-        return redirect(origin)
+        return redirect(origin[1])
     elif origin[0] == False:
         return f"""
         <div style='text-align: center;'>
-            <h1>Short link has been expired {origin[1]}</h1>
+            <h1>Short link has been expired at {origin[1]}</h1>
             <h3>Please retry with a new short link.</h3>
         </div>
         """
