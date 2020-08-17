@@ -131,7 +131,7 @@ def handle_post_request():
                     add_url_to_db(long_url, output_url, exp_date)
                     return f"{output_url}"
                 else:
-                    return "Incorrect data format, should be YYYY-MM-DD"
+                    return jsonify({"error": "Incorrect data format, should be YYYY-MM-DD"})
             else:
                 return f"{short_out(get_random_text(l_exist))}"
 
